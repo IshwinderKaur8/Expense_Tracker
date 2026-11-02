@@ -1,0 +1,35 @@
+### 1. Create (expect 201)
+POST http://localhost:8080/api/v1/categories
+Content-Type: application/json
+
+{ "name": "Food", "color": "#FF8800" }
+
+### 2. List (expect 200)
+GET http://localhost:8080/api/v1/categories
+
+### 3. Duplicate, different case (expect 409)
+POST http://localhost:8080/api/v1/categories
+Content-Type: application/json
+
+{ "name": "food" }
+
+### 4. Invalid input (expect 400 with two details)
+POST http://localhost:8080/api/v1/categories
+Content-Type: application/json
+
+{ "name": "   ", "color": "orange" }
+
+### 5. Rename (expect 200)
+PUT http://localhost:8080/api/v1/categories/1
+Content-Type: application/json
+
+{ "name": "Groceries", "color": "#00AA55" }
+
+### 6. Not found (expect 404)
+PUT http://localhost:8080/api/v1/categories/999
+Content-Type: application/json
+
+{ "name": "X" }
+
+### 7. Delete (expect 204)
+DELETE http://localhost:8080/api/v1/categories/1
