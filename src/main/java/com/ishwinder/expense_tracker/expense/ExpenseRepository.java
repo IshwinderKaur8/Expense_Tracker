@@ -1,5 +1,7 @@
 package com.ishwinder.expense_tracker.expense;
 
+import com.ishwinder.expense_tracker.expense.dto.CategoryTotal;
+import com.ishwinder.expense_tracker.expense.dto.DailyTotal;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -7,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 public interface ExpenseRepository extends JpaRepository<Expense, Long> {
@@ -25,4 +28,29 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
                          @Param("to") LocalDate to,
                          @Param("categoryId") Long categoryId,
                          Pageable pageable);
+
+    @Query("""
+            SELECT new com.ishwinder.expense_tracker.expense.dto.CategoryTotal(
+                       e.categoryId, SUM(e.amount))
+            FROM Expense e
+            WHERE e.userId = :userId
+              AND e.expenseDate >= :from AND e.expenseDate <= :to
+            GROUP BY e.categoryId
+            """)
+    List<CategoryTotal> totalsByCategory(@Param("userId") Long userId,
+                                         @Param("from") LocalDate from,
+                                         @Param("to") LocalDate to);
+
+    @Query("""
+            SELECT new com.ishwinder.expense_tracker.expense.dto.DailyTotal(
+                       e.expenseDate, SUM(e.amount))
+            FROM Expense e
+            WHERE e.userId = :userId
+              AND e.expenseDate >= :from AND e.expenseDate <= :to
+            GROUP BY e.expenseDate
+            ORDER BY e.expenseDate
+            """)
+    List<DailyTotal> dailyTotals(@Param("userId") Long userId,
+                                 @Param("from") LocalDate from,
+                                 @Param("to") LocalDate to);
 }

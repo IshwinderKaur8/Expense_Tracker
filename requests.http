@@ -1,35 +1,54 @@
-### 1. Create (expect 201)
-POST http://localhost:8080/api/v1/categories
+@baseUrl = http://localhost:8080/api/v1
+
+### 1. Create category: Food
+# @name food
+POST {{baseUrl}}/categories
 Content-Type: application/json
 
 { "name": "Food", "color": "#FF8800" }
 
-### 2. List (expect 200)
-GET http://localhost:8080/api/v1/categories
-
-### 3. Duplicate, different case (expect 409)
-POST http://localhost:8080/api/v1/categories
+### 2. Create category: Travel
+# @name travel
+POST {{baseUrl}}/categories
 Content-Type: application/json
 
-{ "name": "food" }
+{ "name": "Travel", "color": "#3366CC" }
 
-### 4. Invalid input (expect 400 with two details)
-POST http://localhost:8080/api/v1/categories
+### 3. Expense: groceries
+POST {{baseUrl}}/expenses
 Content-Type: application/json
 
-{ "name": "   ", "color": "orange" }
+{ "amount": 250.50, "categoryId": {{food.response.body.id}},
+  "expenseDate": "2026-11-03", "description": "Groceries" }
 
-### 5. Rename (expect 200)
-PUT http://localhost:8080/api/v1/categories/1
+### 4. Expense: dinner
+POST {{baseUrl}}/expenses
 Content-Type: application/json
 
-{ "name": "Groceries", "color": "#00AA55" }
+{ "amount": 120.00, "categoryId": {{food.response.body.id}},
+  "expenseDate": "2026-11-10", "description": "Dinner" }
 
-### 6. Not found (expect 404)
-PUT http://localhost:8080/api/v1/categories/999
+### 5. Expense: train ticket
+POST {{baseUrl}}/expenses
 Content-Type: application/json
 
-{ "name": "X" }
+{ "amount": 349.50, "categoryId": {{travel.response.body.id}},
+  "expenseDate": "2026-11-15", "description": "Train" }
 
-### 7. Delete (expect 204)
-DELETE http://localhost:8080/api/v1/categories/1
+### 6. Overall budget for November
+PUT {{baseUrl}}/budgets
+Content-Type: application/json
+
+{ "month": "2026-11", "amount": 1000 }
+
+### 7. Food budget for November
+PUT {{baseUrl}}/budgets
+Content-Type: application/json
+
+{ "month": "2026-11", "categoryId": {{food.response.body.id}}, "amount": 400 }
+
+### 8. THE REPORT
+GET {{baseUrl}}/reports/monthly?month=2026-11
+
+### 9. Expense list (newest first)
+GET {{baseUrl}}/expenses?page=0&size=20

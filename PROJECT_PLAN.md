@@ -40,6 +40,7 @@ Differentiators: visual analytics, automated monthly reporting, flexible categor
 | D-2 | Layered, package-by-feature architecture | Add/remove features with minimal ripple |
 | D-3 | `user_id` on all data tables from day one; login added right after core CRUD | Cheap now, painful later |
 | D-4 | JDK 21 LTS for the project | Spring-supported LTS |
+| D-5 | One overall budget per month is enforced in BudgetService, not the database (MySQL unique keys ignore NULLs). | Known race condition under concurrent writes. Revisit at multi-user. |
 
 ## 5. Open Questions
 | Question | Decision | Reason |
