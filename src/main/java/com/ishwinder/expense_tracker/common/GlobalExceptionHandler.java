@@ -8,6 +8,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -44,6 +45,13 @@ public class GlobalExceptionHandler {
                                                        HttpServletRequest req) {
         return build(HttpStatus.BAD_REQUEST, "INVALID_PARAMETER",
                 "Parameter '" + ex.getName() + "' has an invalid value", List.of(), req);
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ApiError> handleMissingParameter(MissingServletRequestParameterException ex,
+                                                        HttpServletRequest req) {
+        return build(HttpStatus.BAD_REQUEST, "MISSING_PARAMETER",
+                "Parameter '" + ex.getParameterName() + "' is required", List.of(), req);
     }
 
     @ExceptionHandler(NotFoundException.class)
