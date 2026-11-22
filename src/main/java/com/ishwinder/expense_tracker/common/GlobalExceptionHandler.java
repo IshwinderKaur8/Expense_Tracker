@@ -3,9 +3,11 @@ package com.ishwinder.expense_tracker.common;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -21,6 +23,27 @@ public class GlobalExceptionHandler {
                 .toList();
         return build(HttpStatus.BAD_REQUEST, "VALIDATION_FAILED",
                 "Request has invalid fields", issues, req);
+    }
+
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ApiError> handleBadRequest(BadRequestException ex,
+                                                     HttpServletRequest req) {
+        return build(HttpStatus.BAD_REQUEST, "BAD_REQUEST", ex.getMessage(), List.of(), req);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiError> handleUnreadable(HttpMessageNotReadableException ex,
+                                                     HttpServletRequest req) {
+        return build(HttpStatus.BAD_REQUEST, "MALFORMED_REQUEST",
+                "Request body is missing or malformed (check the JSON and date formats)",
+                List.of(), req);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiError> handleTypeMismatch(MethodArgumentTypeMismatchException ex,
+                                                       HttpServletRequest req) {
+        return build(HttpStatus.BAD_REQUEST, "INVALID_PARAMETER",
+                "Parameter '" + ex.getName() + "' has an invalid value", List.of(), req);
     }
 
     @ExceptionHandler(NotFoundException.class)

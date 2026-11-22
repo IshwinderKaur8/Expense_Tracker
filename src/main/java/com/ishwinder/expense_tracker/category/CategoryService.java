@@ -9,7 +9,10 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class CategoryService {
@@ -27,6 +30,20 @@ public class CategoryService {
         return repository.findByUserIdOrderByNameAsc(currentUser.currentUserId()).stream()
                 .map(CategoryResponse::from)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public CategoryResponse getOwned(Long id) {
+        return CategoryResponse.from(findOwned(id));
+    }
+
+    @Transactional(readOnly = true)
+    public Map<Long, CategoryResponse> findByIds(Collection<Long> ids) {
+        if (ids.isEmpty()) {
+            return Map.of();
+        }
+        return repository.findByUserIdAndIdIn(currentUser.currentUserId(), ids).stream()
+                .collect(Collectors.toMap(Category::getId, CategoryResponse::from));
     }
 
     @Transactional
@@ -51,7 +68,7 @@ public class CategoryService {
         }
         category.setName(name);
         category.setColor(request.color());
-        return CategoryResponse.from(category);   // saved automatically at commit
+        return CategoryResponse.from(category);
     }
 
     @Transactional
@@ -59,7 +76,7 @@ public class CategoryService {
         Category category = findOwned(id);
         try {
             repository.delete(category);
-            repository.flush();    // run the DELETE now so a FK violation surfaces here
+            repository.flush();
         } catch (DataIntegrityViolationException e) {
             throw new ConflictException("Category is used by expenses and cannot be deleted");
         }

@@ -7,7 +7,7 @@ import jakarta.persistence.*;
 public class Category {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)   // MySQL AUTO_INCREMENT
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "user_id", nullable = false, updatable = false)
@@ -19,7 +19,7 @@ public class Category {
     @Column(length = 7)
     private String color;
 
-    protected Category() { }   // JPA needs this; protected keeps our code from using it
+    protected Category() { }
 
     public Category(Long userId, String name, String color) {
         this.userId = userId;
