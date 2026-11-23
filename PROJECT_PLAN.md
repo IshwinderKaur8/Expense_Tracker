@@ -41,6 +41,12 @@ Differentiators: visual analytics, automated monthly reporting, flexible categor
 | D-3 | `user_id` on all data tables from day one; login added right after core CRUD | Cheap now, painful later |
 | D-4 | JDK 21 LTS for the project | Spring-supported LTS |
 | D-5 | One overall budget per month is enforced in BudgetService, not the database (MySQL unique keys ignore NULLs). | Known race condition under concurrent writes. Revisit at multi-user. |
+| D-7 | Session cookie (HttpOnly) authentication instead of JWT, because the frontend and API share an origin. |
+| D-8 | CSRF protection stays on, using the XSRF-TOKEN cookie and X-XSRF-TOKEN header. |
+| D-9 | Passwords hashed with BCrypt, max 72 bytes. |
+| D-10 | Multi-stage Docker image (JDK 21 to build, JRE 21 to run), non-root user. |
+| D-11 | Configuration from environment variables, with secrets in an untracked .env file. Never in Git. |
+| D-12 | Dev seed user removed; tests create their own data. |
 
 ## 5. Open Questions
 | Question | Decision | Reason |
@@ -48,3 +54,10 @@ Differentiators: visual analytics, automated monthly reporting, flexible categor
 | Currency | Single currency (INR) | Multi-currency needs exchange rates and conversion. That’s a whole feature, so it goes in the “later” list.|
 |Income or expenses only? |	Expenses only |	Your stories never mention income, so adding it now would be scope creep.|
 | Retention | Rolling 12 months, based on expense_date | Easy to explain and easy to implement as a scheduled job later.|
+
+## Known Gaps
+- Server validates 'not in future' dates using the server time zone (TZ set to Asia/Kolkata); proper fix is a per-user time zone.
+- Open registration: anyone who can reach the server can create an account. That's fine for multi-user later, but a deployed "single user" app needs a switch or invite code.
+- No brute-force protection on login yet (rate limiting or lockout).
+- No password reset or change.
+- The session cookie needs the Secure flag once we serve HTTPS.

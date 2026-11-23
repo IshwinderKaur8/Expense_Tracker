@@ -40,7 +40,7 @@ class AuthApiIntegrationTest {
         jdbc.update("DELETE FROM budgets");
         jdbc.update("DELETE FROM expenses");
         jdbc.update("DELETE FROM categories");
-        jdbc.update("DELETE FROM users WHERE id <> 1");
+        jdbc.update("DELETE FROM users");
     }
 
     @Test

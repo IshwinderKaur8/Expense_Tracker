@@ -83,3 +83,13 @@ An empty month returns zeros and empty lists, never an error.
 
 ## Not in v1 (deliberately)
 Auth endpoints (`/auth/login`), export, splits, recurring, notifications. Each will be added as new paths. None of the above changes.
+
+
+## Auth
+| POST /auth/register | (201, 400, 409) |
+| POST /auth/login | (form-encoded username/password; 200 or 401) |
+| POST /auth/logout | (204) |
+| GET /auth/me | (200 or 401) | 
+
+- Every /api/** endpoint except register and login returns 401 without a session
+- Changing requests need the X-XSRF-TOKEN header

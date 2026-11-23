@@ -10,13 +10,14 @@ import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.security.test.context.support.TestExecutionEvent;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @Import(TestcontainersConfiguration.class)
-@WithUserDetails("dev")       // every request in these tests is made by the seeded user 1
+@WithUserDetails(value = "dev", setupBefore = TestExecutionEvent.TEST_EXECUTION)       // every request in these tests is made by the seeded user 1
 public abstract class IntegrationTestBase {
 
     @Autowired
@@ -25,13 +26,17 @@ public abstract class IntegrationTestBase {
     @Autowired
     protected JdbcTemplate jdbc;
 
-    // Every test starts from a clean slate. User 1 (seeded by V2) is kept.
+    // Every test starts from a clean slate, with user 1 created here (not by a migration).
     @BeforeEach
     protected void cleanDatabase() {
         jdbc.update("DELETE FROM budgets");
         jdbc.update("DELETE FROM expenses");
         jdbc.update("DELETE FROM categories");
-        jdbc.update("DELETE FROM users WHERE id <> 1");
+        jdbc.update("DELETE FROM users");
+        jdbc.update("""
+                INSERT INTO users (id, username, password_hash)
+                VALUES (1, 'dev', 'not-a-real-hash')
+                """);
     }
 
     protected long insertCategory(long userId, String name) {
