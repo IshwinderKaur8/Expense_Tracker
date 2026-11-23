@@ -1,6 +1,9 @@
 package com.ishwinder.expense_tracker.category;
 
 import com.ishwinder.expense_tracker.TestcontainersConfiguration;
+
+import com.ishwinder.expense_tracker.IntegrationTestBase;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,26 +23,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@Import(TestcontainersConfiguration.class)
-class CategoryApiIntegrationTest {
+class CategoryApiIntegrationTest extends IntegrationTestBase {
 
     private static final String URL = "/api/v1/categories";
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private JdbcTemplate jdbc;
-
-    // Every test starts from a clean slate. User 1 (seeded by V2) is kept.
-    @BeforeEach
-    void cleanDatabase() {
-        jdbc.update("DELETE FROM expenses");
-        jdbc.update("DELETE FROM categories");
-        jdbc.update("DELETE FROM users WHERE id <> 1");
-    }
 
     @Test
     void create_returns201WithLocationAndBody() throws Exception {
@@ -166,13 +152,6 @@ class CategoryApiIntegrationTest {
     }
 
     // ---- helpers: set up data directly in the database, bypassing the API ----
-
-    private long insertCategory(long userId, String name) {
-        jdbc.update("INSERT INTO categories (user_id, name) VALUES (?, ?)", userId, name);
-        return jdbc.queryForObject(
-                "SELECT id FROM categories WHERE user_id = ? AND name = ?",
-                Long.class, userId, name);
-    }
 
     private int countCategory(long id) {
         return jdbc.queryForObject(

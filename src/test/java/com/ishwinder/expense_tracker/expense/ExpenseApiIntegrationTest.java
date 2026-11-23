@@ -1,6 +1,9 @@
 package com.ishwinder.expense_tracker.expense;
 
 import com.ishwinder.expense_tracker.TestcontainersConfiguration;
+
+import com.ishwinder.expense_tracker.IntegrationTestBase;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,25 +24,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@Import(TestcontainersConfiguration.class)
-class ExpenseApiIntegrationTest {
+class ExpenseApiIntegrationTest extends IntegrationTestBase{
 
     private static final String URL = "/api/v1/expenses";
-
-    @Autowired
-    private MockMvc mockMvc;
-    @Autowired
-    private JdbcTemplate jdbc;
 
     private long foodId;
 
     @BeforeEach
-    void setUp() {
-        jdbc.update("DELETE FROM expenses");
-        jdbc.update("DELETE FROM categories");
-        jdbc.update("DELETE FROM users WHERE id <> 1");
+    void createFoodCategory() {
         foodId = insertCategory(1L, "Food");
     }
 
@@ -197,13 +189,6 @@ class ExpenseApiIntegrationTest {
     }
 
     // ---- helpers ----
-
-    private long insertCategory(long userId, String name) {
-        jdbc.update("INSERT INTO categories (user_id, name) VALUES (?, ?)", userId, name);
-        return jdbc.queryForObject(
-                "SELECT id FROM categories WHERE user_id = ? AND name = ?",
-                Long.class, userId, name);
-    }
 
     private long insertExpense(long categoryId, String amount, String date) {
         jdbc.update("""
