@@ -1,6 +1,6 @@
 # Expense Tracker
 
-![CI](https://github.com/IshwinderKaur8/expense-tracker/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/IshwinderKaur8/Expense_Tracker/actions/workflows/ci.yml/badge.svg)
 
 A personal-finance web app: record expenses by category, set monthly budgets, and see
 spending in a monthly report with charts.
