@@ -1,0 +1,89 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# A newer push to the same branch cancels the older, now-pointless run
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# Least privilege: jobs get read-only access unless they ask for more
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Build and test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      # Runs every unit and integration test (Testcontainers starts MySQL itself)
+      - name: Build and run all tests
+        run: ./mvnw -B verify
+
+      - name: Show test reports if something failed
+        if: failure()
+        run: cat target/surefire-reports/*.txt || true
+
+  container:
+    name: Container smoke test and publish
+    needs: test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v7
+
+      # Does the real image start with a real MySQL and answer its health check?
+      - name: Start the full stack
+        run: |
+          printf 'DB_PASSWORD=ci-password\nMYSQL_ROOT_PASSWORD=ci-root-password\n' > .env
+          docker compose up -d --build
+
+      - name: Wait for the application to report healthy
+        run: |
+          for i in $(seq 1 40); do
+            if curl -fsS http://localhost:8080/actuator/health | grep -q '"status":"UP"'; then
+              echo "Application is up"
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "Application did not become healthy in time"
+          docker compose logs
+          exit 1
+
+      - name: Stop the stack
+        if: always()
+        run: docker compose down -v
+
+      # Publishing happens only for merges to main, never for pull requests
+      - name: Log in to GitHub Container Registry
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: echo "$TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+
+      - name: Build and push the image
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          IMAGE="ghcr.io/${GITHUB_REPOSITORY,,}"      # registry names must be lowercase
+          docker build \
+            --label "org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" \
+            -t "$IMAGE:${GITHUB_SHA}" -t "$IMAGE:latest" .
+          docker push "$IMAGE:${GITHUB_SHA}"
+          docker push "$IMAGE:latest"
