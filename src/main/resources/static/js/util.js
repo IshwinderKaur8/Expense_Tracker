@@ -22,6 +22,17 @@ const bus = new EventTarget();
 export const emit = (name) => bus.dispatchEvent(new Event(name));
 export const on = (name, handler) => bus.addEventListener(name, handler);
 
+export function getCookie(name) {
+  const cookie = document.cookie.split('; ').find((c) => c.startsWith(name + '='));
+  return cookie ? decodeURIComponent(cookie.substring(name.length + 1)) : null;
+}
+
+// Spring Security puts the CSRF token in the XSRF-TOKEN cookie; we echo it in a header.
+export function csrfHeaders() {
+  const token = getCookie('XSRF-TOKEN');
+  return token ? { 'X-XSRF-TOKEN': token } : {};
+}
+
 // ---------- API access ----------
 export class ApiError extends Error {
   constructor(message, details = []) {
@@ -32,9 +43,13 @@ export class ApiError extends Error {
 
 export async function api(path, options = {}) {
   const response = await fetch('/api/v1' + path, {
-    headers: { 'Content-Type': 'application/json' },
     ...options,
+    headers: { 'Content-Type': 'application/json', ...csrfHeaders(), ...options.headers },
   });
+  if (response.status === 401) {
+    emit('unauthorized');                                         // session expired or never started
+    throw new ApiError('Your session has expired. Please log in again.');
+  }
   if (response.status === 204) return null;                       // DELETE: no body
   const body = await response.json().catch(() => null);
   if (!response.ok) {

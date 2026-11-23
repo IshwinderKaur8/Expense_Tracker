@@ -1,6 +1,7 @@
 import './expenses.js';
 import './budgets.js';
 import './report.js';
+import { initAuth } from './auth.js';
 import { loadCategories } from './categories.js';
 import { emit, errorText, notify, state } from './util.js';
 
@@ -13,9 +14,13 @@ monthInput.addEventListener('change', () => {
   emit('month-changed');
 });
 
-try {
-  await loadCategories();                        // fills the dropdowns first
-} catch (error) {
-  notify(errorText(error), true);
+async function start() {                         // runs once a login session is confirmed
+  try {
+    await loadCategories();                      // fills the dropdowns first
+  } catch (error) {
+    notify(errorText(error), true);
+  }
+  emit('month-changed');                         // first load of the list and report
 }
-emit('month-changed');                           // first load of the list and report
+
+await initAuth(start);

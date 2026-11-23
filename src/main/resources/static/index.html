@@ -11,12 +11,39 @@
 <body>
   <header>
     <h1>Expense Tracker</h1>
-    <label>Month <input type="month" id="month"></label>
+    <div id="app-bar" hidden>
+      <label>Month <input type="month" id="month"></label>
+      <span id="username"></span>
+      <button type="button" id="logout">Log out</button>
+    </div>
   </header>
 
   <div id="message" role="status" hidden></div>
 
-  <main>
+  <main id="auth-view" class="auth">
+    <section class="card" id="login-card">
+      <h2>Log in</h2>
+      <form id="login-form" class="stack">
+        <input id="login-username" type="text" autocomplete="username" placeholder="Username" aria-label="Username" required>
+        <input id="login-password" type="password" autocomplete="current-password" placeholder="Password" aria-label="Password" required>
+        <button type="submit">Log in</button>
+      </form>
+      <p class="hint">No account? <button type="button" class="link" id="show-register">Create one</button></p>
+    </section>
+
+    <section class="card" id="register-card" hidden>
+      <h2>Create account</h2>
+      <form id="register-form" class="stack">
+        <input id="register-username" type="text" autocomplete="username" placeholder="Username" aria-label="Username" minlength="3" maxlength="30" pattern="[A-Za-z0-9_.\-]+" required>
+        <input id="register-password" type="password" autocomplete="new-password" placeholder="Password (8+ characters)" aria-label="Password" minlength="8" maxlength="72" required>
+        <button type="submit">Create account</button>
+      </form>
+      <p class="hint">Username: 3-30 letters, digits, dot, dash or underscore.
+        Already registered? <button type="button" class="link" id="show-login">Log in</button></p>
+    </section>
+  </main>
+
+  <main id="app-view" hidden>
     <section class="card">
       <h2>Monthly report</h2>
       <div id="summary" class="summary"></div>
