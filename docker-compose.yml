@@ -1,4 +1,47 @@
 services:
+  backup:
+    image: mysql:8.0
+    profiles: ["tools"]            # only runs when asked: docker compose run --rm backup
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      MYSQL_PWD: ${DB_PASSWORD}
+    volumes:
+      - ./backups:/backups
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -e
+        FILE=/backups/expense_tracker_$$(date +%Y%m%d_%H%M%S).sql.gz
+        mysqldump -h db -u expense_app --no-tablespaces --single-transaction expense_tracker > "$$FILE.tmp"
+        gzip -c "$$FILE.tmp" > "$$FILE"
+        rm -f "$$FILE.tmp"
+        gzip -t "$$FILE"
+        echo "Backup written and verified: $$FILE"
+        # keep only the 14 newest backups
+        ls -1t /backups/expense_tracker_*.sql.gz | tail -n +15 | while read -r old; do rm -f "$$old"; done
+
+  restore:
+    image: mysql:8.0
+    profiles: ["tools"]
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      MYSQL_PWD: ${DB_PASSWORD}
+      BACKUP_FILE: ""
+    volumes:
+      - ./backups:/backups:ro
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -e
+        [ -n "$$BACKUP_FILE" ] || { echo "Set BACKUP_FILE, e.g. -e BACKUP_FILE=expense_tracker_20261124_210000.sql.gz"; exit 1; }
+        [ -f "/backups/$$BACKUP_FILE" ] || { echo "No such file: $$BACKUP_FILE"; exit 1; }
+        gzip -t "/backups/$$BACKUP_FILE"
+        gunzip -c "/backups/$$BACKUP_FILE" | mysql -h db -u expense_app expense_tracker
+        echo "Restored $$BACKUP_FILE"
   db:
     image: mysql:8.0
     restart: unless-stopped

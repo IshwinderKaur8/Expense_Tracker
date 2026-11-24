@@ -19,6 +19,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -34,9 +35,12 @@ class AuthApiIntegrationTest {
     private MockMvc mockMvc;
     @Autowired
     private JdbcTemplate jdbc;
+    @Autowired
+    private LoginAttemptService loginAttempts;                      // NEW (1 of 3)
 
     @BeforeEach
     void cleanDatabase() {
+        loginAttempts.clear();                                      // NEW (2 of 3)
         jdbc.update("DELETE FROM budgets");
         jdbc.update("DELETE FROM expenses");
         jdbc.update("DELETE FROM categories");
@@ -90,6 +94,25 @@ class AuthApiIntegrationTest {
                 .andExpect(status().isUnauthorized());
         mockMvc.perform(formLogin("/api/v1/auth/login").user("nobody").password(PASSWORD))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void login_returns429_afterFiveFailures_evenWithTheCorrectPassword() throws Exception {   // NEW (3 of 3)
+        register("alice", PASSWORD);
+        register("bob", PASSWORD);
+
+        for (int i = 0; i < 5; i++) {
+            mockMvc.perform(formLogin("/api/v1/auth/login").user("alice").password("wrong-" + i))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        mockMvc.perform(formLogin("/api/v1/auth/login").user("alice").password(PASSWORD))
+                .andExpect(status().isTooManyRequests())
+                .andExpect(header().exists("Retry-After"));
+
+        // someone else is unaffected
+        mockMvc.perform(formLogin("/api/v1/auth/login").user("bob").password(PASSWORD))
+                .andExpect(status().isOk());
     }
 
     @Test

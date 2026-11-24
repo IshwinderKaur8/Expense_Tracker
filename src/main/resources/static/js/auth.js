@@ -43,7 +43,7 @@ async function login(username, password) {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded', ...csrfHeaders() },
     body: new URLSearchParams({ username, password }),
   });
-  return response.ok;
+  return response.status;
 }
 
 /** Wires up login/register/logout. Calls onAuthenticated() whenever a session is confirmed. */
@@ -66,7 +66,12 @@ export async function initAuth(onAuthenticated) {
     try {
       const username = loginForm.querySelector('#login-username').value;
       const password = loginForm.querySelector('#login-password').value;
-      if (!(await login(username, password))) {
+            const status = await login(username, password);
+      if (status === 429) {
+        notify('Too many failed attempts. Please wait a few minutes and try again.', true);
+        return;
+      }
+      if (status !== 200) {
         notify('Wrong username or password', true);
         return;
       }
