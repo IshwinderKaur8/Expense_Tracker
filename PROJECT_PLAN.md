@@ -47,6 +47,12 @@ Differentiators: visual analytics, automated monthly reporting, flexible categor
 | D-10 | Multi-stage Docker image (JDK 21 to build, JRE 21 to run), non-root user. |
 | D-11 | Configuration from environment variables, with secrets in an untracked .env file. Never in Git. |
 | D-12 | Dev seed user removed; tests create their own data. |
+| D-13 | CI on GitHub Actions. Every PR runs all tests plus a full-stack container smoke test on a pinned ubuntu-24.04 runner |
+| D-14 | main is protected by a ruleset; changes arrive only via pull requests with passing checks. |
+| D-15 | Images are published to GitHub Container Registry, tagged with the commit SHA and latest. |
+D-20: Backups are mysqldump snapshots taken by a containerized helper, verified with gzip -t, with the last 14 kept. Restore was tested by a full disaster drill.
+D-21: Failed logins are throttled per address+username (5 per 15 minutes, in memory). Known limitation: not shared across instances and reset on restart.
+
 
 ## 5. Open Questions
 | Question | Decision | Reason |
@@ -61,3 +67,4 @@ Differentiators: visual analytics, automated monthly reporting, flexible categor
 - No brute-force protection on login yet (rate limiting or lockout).
 - No password reset or change.
 - The session cookie needs the Secure flag once we serve HTTPS.
+- Deployment target: local Docker Compose for now. VPS configuration prepared and rehearsed (deploy/).

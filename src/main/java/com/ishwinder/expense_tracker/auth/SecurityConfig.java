@@ -1,5 +1,6 @@
 package com.ishwinder.expense_tracker.auth;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,6 +11,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 @Configuration
@@ -17,7 +19,8 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 public class SecurityConfig {
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    SecurityFilterChain securityFilterChain(HttpSecurity http,
+                                            LoginAttemptService attempts) throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
                 // the web page itself and its assets (the page shows the login form)
@@ -32,10 +35,15 @@ public class SecurityConfig {
                 .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler()))
             .formLogin(form -> form
                 .loginProcessingUrl("/api/v1/auth/login")
-                .successHandler((request, response, authentication) ->
-                        response.setStatus(HttpServletResponse.SC_OK))
-                .failureHandler((request, response, exception) ->
-                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED)))
+                .successHandler((request, response, authentication) -> {
+                    attempts.recordSuccess(loginKey(request));
+                    response.setStatus(HttpServletResponse.SC_OK);
+                })
+                .failureHandler((request, response, exception) -> {
+                    attempts.recordFailure(loginKey(request));
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                }))
+            .addFilterBefore(new LoginRateLimitFilter(attempts), UsernamePasswordAuthenticationFilter.class)
             .logout(logout -> logout
                 .logoutUrl("/api/v1/auth/logout")
                 .logoutSuccessHandler((request, response, authentication) ->
@@ -48,5 +56,9 @@ public class SecurityConfig {
     @Bean
     PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    private static String loginKey(HttpServletRequest request) {
+        return LoginAttemptService.key(request.getRemoteAddr(), request.getParameter("username"));
     }
 }
