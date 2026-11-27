@@ -1,5 +1,5 @@
 package com.ishwinder.expense_tracker.report;
-
+import com.ishwinder.expense_tracker.budget.BudgetStatus;
 import com.ishwinder.expense_tracker.budget.BudgetService;
 import com.ishwinder.expense_tracker.budget.dto.BudgetResponse;
 import com.ishwinder.expense_tracker.category.CategoryService;
@@ -9,6 +9,9 @@ import com.ishwinder.expense_tracker.expense.ExpenseStatsService;
 import com.ishwinder.expense_tracker.expense.dto.CategoryTotal;
 import com.ishwinder.expense_tracker.expense.dto.DailyTotal;
 import com.ishwinder.expense_tracker.report.dto.MonthlyReport;
+
+import com.ishwinder.expense_tracker.report.ReportService;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -134,5 +137,33 @@ class ReportServiceTest {
     void monthly_throwsBadRequest_whenMonthIsInvalid() {
         assertThatThrownBy(() -> service.monthly("October"))
                 .isInstanceOf(BadRequestException.class);
+    }
+
+        @Test
+    void monthly_flagsWarningAndExceeded_againstBudgets() {
+        when(expenseStats.totalsByCategory(OCT_1, OCT_31)).thenReturn(List.of(
+                new CategoryTotal(3L, new BigDecimal("850.00")),
+                new CategoryTotal(5L, new BigDecimal("300.00"))));
+        when(budgetService.list("2026-10")).thenReturn(List.of(
+                new BudgetResponse(1L, "2026-10", null, null, new BigDecimal("1000.00")),
+                new BudgetResponse(2L, "2026-10", 3L, "Food", new BigDecimal("1000.00")),
+                new BudgetResponse(3L, "2026-10", 5L, "Travel", new BigDecimal("250.00"))));
+        when(categoryService.findByIds(any())).thenReturn(Map.of(
+                3L, new CategoryResponse(3L, "Food", null),
+                5L, new CategoryResponse(5L, "Travel", null)));
+
+        MonthlyReport report = service.monthly("2026-10");
+
+        // total 1150 of 1000
+        assertThat(report.overallStatus()).isEqualTo(BudgetStatus.EXCEEDED);
+        assertThat(report.overallPercentUsed()).isEqualByComparingTo("115.00");
+
+        MonthlyReport.CategoryLine food = report.byCategory().stream()
+                .filter(line -> line.name().equals("Food")).findFirst().orElseThrow();
+        MonthlyReport.CategoryLine travel = report.byCategory().stream()
+                .filter(line -> line.name().equals("Travel")).findFirst().orElseThrow();
+        assertThat(food.budgetStatus()).isEqualTo(BudgetStatus.WARNING);     // 85% used
+        assertThat(food.budgetPercentUsed()).isEqualByComparingTo("85.00");
+        assertThat(travel.budgetStatus()).isEqualTo(BudgetStatus.EXCEEDED);  // 120% used
     }
 }

@@ -1,6 +1,7 @@
 package com.ishwinder.expense_tracker.report;
 
 import com.ishwinder.expense_tracker.budget.BudgetService;
+import com.ishwinder.expense_tracker.budget.BudgetStatus;
 import com.ishwinder.expense_tracker.budget.dto.BudgetResponse;
 import com.ishwinder.expense_tracker.category.CategoryService;
 import com.ishwinder.expense_tracker.category.dto.CategoryResponse;
@@ -77,6 +78,7 @@ public class ReportService {
         List<CategoryLine> byCategory = categoryIds.stream()
                 .map(id -> {
                     BigDecimal spent = spentByCategory.getOrDefault(id, ZERO);
+                    BigDecimal budget = budgetByCategory.get(id);
                     CategoryResponse category = categories.get(id);
                     return new CategoryLine(
                             id,
@@ -84,7 +86,9 @@ public class ReportService {
                             category != null ? category.color() : null,
                             spent,
                             percentOf(spent, totalSpent),
-                            budgetByCategory.get(id));
+                            budget,
+                            BudgetStatus.percentUsed(spent, budget),
+                            BudgetStatus.evaluate(spent, budget));
                 })
                 .sorted(Comparator.comparing(CategoryLine::spent).reversed()
                         .thenComparing(CategoryLine::name))
@@ -98,6 +102,8 @@ public class ReportService {
                 .toList();
 
         return new MonthlyReport(yearMonth.toString(), totalSpent, overallBudget, remaining,
+                BudgetStatus.percentUsed(totalSpent, overallBudget),
+                BudgetStatus.evaluate(totalSpent, overallBudget),
                 byCategory, dailyTotals);
     }
 
