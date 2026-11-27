@@ -82,6 +82,24 @@ class ReportApiIntegrationTest extends IntegrationTestBase {
                 .andExpect(jsonPath("$.error").value("BAD_REQUEST"));
     }
 
+        @Test
+    void monthly_marksWarningAndExceeded_forBudgets() throws Exception {
+        long food = insertCategory(1L, "Food");
+        long travel = insertCategory(1L, "Travel");
+        insertExpense(1L, food, "85.00", "2026-10-05");      // 85% of 100  -> WARNING
+        insertExpense(1L, travel, "165.00", "2026-10-06");   // 110% of 150 -> EXCEEDED
+        insertBudget(null, "200.00");                        // 250 of 200  -> EXCEEDED
+        insertBudget(food, "100.00");
+        insertBudget(travel, "150.00");
+
+        mockMvc.perform(get(URL).param("month", "2026-10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.overallStatus").value("EXCEEDED"))
+                .andExpect(jsonPath("$.overallPercentUsed").value(125.0))
+                .andExpect(jsonPath("$.byCategory[?(@.name=='Food')].budgetStatus").value("WARNING"))
+                .andExpect(jsonPath("$.byCategory[?(@.name=='Travel')].budgetStatus").value("EXCEEDED"));
+    }
+
     // ---- helpers ----
 
     private void insertExpense(long userId, long categoryId, String amount, String date) {
