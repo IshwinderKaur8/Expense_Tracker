@@ -47,6 +47,10 @@
     <section class="card">
       <h2>Monthly report</h2>
       <div id="summary" class="summary"></div>
+      <div id="budget-warnings" class="budget-warnings" hidden>
+        <h3>Budget alerts</h3>
+        <ul id="budget-warning-list"></ul>
+      </div>
       <div id="charts" class="charts">
         <div class="chart-box"><canvas id="category-chart"></canvas></div>
         <div class="chart-box"><canvas id="daily-chart"></canvas></div>
@@ -55,7 +59,13 @@
       <div class="table-wrap">
         <table id="category-table">
           <thead>
-            <tr><th>Category</th><th class="num">Spent</th><th class="num">Share</th><th class="num">Budget</th></tr>
+            <tr>
+              <th>Category</th>
+              <th class="num">Spent</th>
+              <th class="num">Share</th>
+              <th class="num">Budget</th>
+              <th>Status</th>
+            </tr>
           </thead>
           <tbody></tbody>
         </table>
