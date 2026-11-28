@@ -15,6 +15,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +32,7 @@ public class ExpenseService {
     private final CurrentUserProvider currentUser;
 
     public ExpenseService(ExpenseRepository repository, CategoryService categoryService,
-                          CurrentUserProvider currentUser) {
+            CurrentUserProvider currentUser) {
         this.repository = repository;
         this.categoryService = categoryService;
         this.currentUser = currentUser;
@@ -43,10 +44,43 @@ public class ExpenseService {
         Expense saved = repository.save(new Expense(
                 currentUser.currentUserId(),
                 category.id(),
-                request.amount().setScale(2),      // @Digits guarantees no rounding is needed
+                request.amount().setScale(2), // @Digits guarantees no rounding is needed
                 request.expenseDate(),
                 cleanDescription(request.description())));
         return ExpenseResponse.from(saved, category.name());
+    }
+
+    @Transactional
+    public Expense createFromSubscription(Long categoryId, java.math.BigDecimal amount,
+            LocalDate expenseDate, String description) {
+        CategoryResponse category = categoryService.getOwned(categoryId);
+
+        return repository.save(new Expense(
+                currentUser.currentUserId(),
+                category.id(),
+                amount.setScale(2),
+                expenseDate,
+                cleanDescription(description)));
+    }
+
+    @Transactional
+    public Expense createFromSubscription(
+            Long userId,
+            Long categoryId,
+            BigDecimal amount,
+            LocalDate expenseDate,
+            String description) {
+
+        CategoryResponse category = categoryService.getOwnedByUserId(categoryId, userId);
+
+        Expense saved = repository.save(new Expense(
+                userId,
+                category.id(),
+                amount.setScale(2),
+                expenseDate,
+                cleanDescription(description)));
+
+        return saved;
     }
 
     @Transactional(readOnly = true)
@@ -58,7 +92,7 @@ public class ExpenseService {
 
     @Transactional(readOnly = true)
     public PageResponse<ExpenseResponse> list(LocalDate from, LocalDate to, Long categoryId,
-                                              int page, int size) {
+            int page, int size) {
         if (from != null && to != null && from.isAfter(to)) {
             throw new BadRequestException("'from' must not be after 'to'");
         }

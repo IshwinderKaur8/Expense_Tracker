@@ -131,3 +131,33 @@ button.link { border: none; background: none; color: var(--accent); padding: 0; 
   color: var(--muted);
   font-size: .8rem;
 }
+
+/* Recurring subscriptions form */
+#subscription-form {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+
+#subscription-form input,
+#subscription-form select {
+  flex: 1 1 140px;
+  min-width: 0;
+}
+
+#subscription-form button {
+  flex: 0 0 auto;
+}
+
+#subscriptions-section .table-wrap {
+  margin-top: .5rem;
+}
+
+@media (max-width: 600px) {
+  #subscription-form input,
+  #subscription-form select,
+  #subscription-form button {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+}

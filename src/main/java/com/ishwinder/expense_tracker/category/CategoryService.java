@@ -5,6 +5,9 @@ import com.ishwinder.expense_tracker.category.dto.CategoryResponse;
 import com.ishwinder.expense_tracker.common.ConflictException;
 import com.ishwinder.expense_tracker.common.CurrentUserProvider;
 import com.ishwinder.expense_tracker.common.NotFoundException;
+
+import com.ishwinder.expense_tracker.category.CategoryRepository;
+
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +38,14 @@ public class CategoryService {
     @Transactional(readOnly = true)
     public CategoryResponse getOwned(Long id) {
         return CategoryResponse.from(findOwned(id));
+    }
+
+    @Transactional(readOnly = true)
+    public CategoryResponse getOwnedByUserId(Long categoryId, Long userId) {
+        Category category = repository.findByIdAndUserId(categoryId, userId)
+                .orElseThrow(() -> new NotFoundException(
+                        "Category " + categoryId + " not found"));
+        return CategoryResponse.from(category);
     }
 
     @Transactional(readOnly = true)

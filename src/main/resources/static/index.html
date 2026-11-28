@@ -117,6 +117,53 @@
       </div>
     </section>
 
+    </section>
+
+    <!-- Recurring subscriptions -->
+    <section class="card" id="subscriptions-section">
+      <h2>Recurring subscriptions</h2>
+
+      <form id="subscription-form" class="grid">
+        <input id="subscription-amount" type="number" step="0.01" min="0.01" placeholder="Amount"
+          aria-label="Subscription amount" required>
+
+        <select id="subscription-category" aria-label="Subscription category" required></select>
+
+        <select id="subscription-frequency" aria-label="Frequency" required>
+          <option value="MONTHLY">Monthly</option>
+          <option value="WEEKLY">Weekly</option>
+          <option value="YEARLY">Yearly</option>
+        </select>
+
+        <input id="subscription-start-date" type="date" aria-label="Start date" required>
+
+        <input id="subscription-description" type="text" maxlength="255" placeholder="Description (optional)"
+          aria-label="Subscription description">
+
+        <button type="submit" id="subscription-submit">Add subscription</button>
+      </form>
+
+      <h3 class="spaced">Your subscriptions</h3>
+      <div id="subscription-message" role="status" hidden></div>
+
+      <div class="table-wrap">
+        <table id="subscription-table">
+          <thead>
+            <tr>
+              <th>Description</th>
+              <th>Category</th>
+              <th class="num">Amount</th>
+              <th>Frequency</th>
+              <th>Next due</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
     <section class="card">
       <h2>Set budget</h2>
       <form id="budget-form" class="row">
