@@ -53,4 +53,14 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
     List<DailyTotal> dailyTotals(@Param("userId") Long userId,
                                  @Param("from") LocalDate from,
                                  @Param("to") LocalDate to);
+
+  @Query("""
+        SELECT e FROM Expense e
+        WHERE e.userId = :userId
+          AND e.expenseDate >= :from AND e.expenseDate <= :to
+        ORDER BY e.expenseDate ASC, e.id ASC
+        """)
+List<Expense> findAllForExport(@Param("userId") Long userId,
+                               @Param("from") LocalDate from,
+                               @Param("to") LocalDate to);
 }

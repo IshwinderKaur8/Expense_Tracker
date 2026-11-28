@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -8,6 +9,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <script type="module" src="js/main.js"></script>
 </head>
+
 <body>
   <header>
     <h1>Expense Tracker</h1>
@@ -24,8 +26,10 @@
     <section class="card" id="login-card">
       <h2>Log in</h2>
       <form id="login-form" class="stack">
-        <input id="login-username" type="text" autocomplete="username" placeholder="Username" aria-label="Username" required>
-        <input id="login-password" type="password" autocomplete="current-password" placeholder="Password" aria-label="Password" required>
+        <input id="login-username" type="text" autocomplete="username" placeholder="Username" aria-label="Username"
+          required>
+        <input id="login-password" type="password" autocomplete="current-password" placeholder="Password"
+          aria-label="Password" required>
         <button type="submit">Log in</button>
       </form>
       <p class="hint">No account? <button type="button" class="link" id="show-register">Create one</button></p>
@@ -34,8 +38,10 @@
     <section class="card" id="register-card" hidden>
       <h2>Create account</h2>
       <form id="register-form" class="stack">
-        <input id="register-username" type="text" autocomplete="username" placeholder="Username" aria-label="Username" minlength="3" maxlength="30" pattern="[A-Za-z0-9_.\-]+" required>
-        <input id="register-password" type="password" autocomplete="new-password" placeholder="Password (8+ characters)" aria-label="Password" minlength="8" maxlength="72" required>
+        <input id="register-username" type="text" autocomplete="username" placeholder="Username" aria-label="Username"
+          minlength="3" maxlength="30" pattern="[A-Za-z0-9_.\-]+" required>
+        <input id="register-password" type="password" autocomplete="new-password" placeholder="Password (8+ characters)"
+          aria-label="Password" minlength="8" maxlength="72" required>
         <button type="submit">Create account</button>
       </form>
       <p class="hint">Username: 3-30 letters, digits, dot, dash or underscore.
@@ -46,6 +52,10 @@
   <main id="app-view" hidden>
     <section class="card">
       <h2>Monthly report</h2>
+      <div class="report-actions">
+        <button type="button" id="export-csv">Export CSV</button>
+        <button type="button" id="export-pdf">Export PDF</button>
+      </div>
       <div id="summary" class="summary"></div>
       <div id="budget-warnings" class="budget-warnings" hidden>
         <h3>Budget alerts</h3>
@@ -75,10 +85,12 @@
     <section class="card">
       <h2 id="expense-form-title">Add expense</h2>
       <form id="expense-form" class="grid">
-        <input id="expense-amount" type="number" step="0.01" min="0.01" placeholder="Amount" aria-label="Amount" required>
+        <input id="expense-amount" type="number" step="0.01" min="0.01" placeholder="Amount" aria-label="Amount"
+          required>
         <select id="expense-category" aria-label="Category" required></select>
         <input id="expense-date" type="date" aria-label="Date" required>
-        <input id="expense-description" type="text" maxlength="255" placeholder="Description (optional)" aria-label="Description">
+        <input id="expense-description" type="text" maxlength="255" placeholder="Description (optional)"
+          aria-label="Description">
         <button type="submit" id="expense-submit">Add</button>
         <button type="button" id="expense-cancel" hidden>Cancel edit</button>
       </form>
@@ -87,7 +99,13 @@
       <div class="table-wrap">
         <table id="expense-table">
           <thead>
-            <tr><th>Date</th><th>Category</th><th>Description</th><th class="num">Amount</th><th></th></tr>
+            <tr>
+              <th>Date</th>
+              <th>Category</th>
+              <th>Description</th>
+              <th class="num">Amount</th>
+              <th></th>
+            </tr>
           </thead>
           <tbody></tbody>
         </table>
@@ -103,7 +121,8 @@
       <h2>Set budget</h2>
       <form id="budget-form" class="row">
         <select id="budget-category" aria-label="Budget category"></select>
-        <input id="budget-amount" type="number" step="0.01" min="0.01" placeholder="Amount" aria-label="Budget amount" required>
+        <input id="budget-amount" type="number" step="0.01" min="0.01" placeholder="Amount" aria-label="Budget amount"
+          required>
         <button type="submit">Save budget</button>
       </form>
       <p class="hint">Applies to the month selected at the top. Saving again replaces the amount.</p>
@@ -113,11 +132,13 @@
       <h2>Categories</h2>
       <ul id="category-list"></ul>
       <form id="category-form" class="row">
-        <input id="category-name" type="text" maxlength="50" placeholder="New category" aria-label="Category name" required>
+        <input id="category-name" type="text" maxlength="50" placeholder="New category" aria-label="Category name"
+          required>
         <input id="category-color" type="color" value="#4e79a7" aria-label="Category color">
         <button type="submit">Add category</button>
       </form>
     </section>
   </main>
 </body>
+
 </html>

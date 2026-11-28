@@ -11,6 +11,8 @@ const noData = document.querySelector('#no-data');
 const tbody = document.querySelector('#category-table tbody');
 const categoryCanvas = document.querySelector('#category-chart');
 const dailyCanvas = document.querySelector('#daily-chart');
+const exportCsvButton = document.querySelector('#export-csv');
+const exportPdfButton = document.querySelector('#export-pdf');
 
 let categoryChart = null;
 let dailyChart = null;
@@ -25,6 +27,41 @@ async function load() {
     notify(errorText(error), true);
   }
 }
+
+async function downloadExport(format) {
+  const month = state.month;
+
+  try {
+    const response = await fetch(
+      `/api/v1/reports/monthly/export/${format}?month=${month}`,
+      { credentials: 'same-origin' }
+    );
+
+    if (!response.ok) {
+      throw new Error(`${format.toUpperCase()} export failed (${response.status})`);
+    }
+
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    link.href = url;
+    link.download = format === 'csv'
+      ? `expenses-${month}.csv`
+      : `report-${month}.pdf`;
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch (error) {
+    notify(error.message || `Could not export ${format.toUpperCase()}.`, true);
+  }
+}
+
+exportCsvButton?.addEventListener('click', () => downloadExport('csv'));
+exportPdfButton?.addEventListener('click', () => downloadExport('pdf'));
 
 function statusBadge(status) {
   const normalized = String(status ?? 'NONE').toUpperCase();
