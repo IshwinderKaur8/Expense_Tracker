@@ -4,6 +4,7 @@ import './report.js';
 import { initAuth } from './auth.js';
 import { loadCategories } from './categories.js';
 import { emit, errorText, notify, state } from './util.js';
+import { initSubscriptions } from './subscriptions.js';
 
 const monthInput = document.querySelector('#month');
 monthInput.value = state.month;
@@ -17,6 +18,7 @@ monthInput.addEventListener('change', () => {
 async function start() {                         // runs once a login session is confirmed
   try {
     await loadCategories();                      // fills the dropdowns first
+    await initSubscriptions();
   } catch (error) {
     notify(errorText(error), true);
   }
